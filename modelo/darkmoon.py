@@ -13,9 +13,9 @@ class Albums:
 
     @classmethod
     def listar_albums(cls):
-        print (f'{'Nome do Album'.ljust(25)} | {'Artista'.ljust(25)} | {'Número de faixas'.ljust(25)} | Estoque')
+        print (f'{'Nome do Album'.ljust(28)} | {'Artista'.ljust(25)} | {'Número de faixas'.ljust(25)} | Estoque')
         for i in Albums.album:
-            print (f'{i._nome.ljust(25)} | {i._artista.ljust(25)} | {i._quant_musicas:<25} | {i.ativo}')
+            print (f'{i._nome.ljust(28)} | {i._artista.ljust(25)} | {i._quant_musicas:<25} | {i.ativo}')
 
     @property
     def ativo(self):
@@ -23,10 +23,3 @@ class Albums:
 
     def estoque_alt(self):
         self._ativo = not self._ativo
-
-
-album1 = Albums('The Dark Side of the Moon', 'Pink Floyd', 10)
-album1.estoque_alt()
-album2 = Albums('Abbey Road', 'The Beatles', 17)
-
-Albums.listar_albums()

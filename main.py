@@ -1,19 +1,26 @@
 from fastapi import FastAPI, Query
+from contextlib import asynccontextmanager
 from modelo.darkmoon import Albums
 from typing import Optional, List
 import random
 
+
+@asynccontextmanager
+async def lifespan(app:FastAPI):
+    print("Carregando álbuns do banco...")
+    Albums.carregar_db()
+    print (f"{len(Albums.album)} álbuns carregados!")
+
+    yield
+
+    print("Encerrando aplicação...")
+
 app = FastAPI(
     title="Darkmoon Records API",
     description="API Publica de catálogo musical",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
-
-@app.on_event("startup")
-def startup():
-    print("Carregando álbuns do banco...")
-    Albums.carregar_db
-    print(f'{len(Albums.album)} álbuns carregados!')
 
 #listando todos os albuns do catalogo
 def listar_albums():

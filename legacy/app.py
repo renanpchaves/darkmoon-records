@@ -1,3 +1,12 @@
+"""
+DEPRECADO - Versão CLI original (v1.0)
+Este arquivo não é mais usado.
+A nova versão é uma API REST em /api/main.py
+
+Mantido apenas para referência histórica.
+Data de descontinuação: 20/03/2026
+"""
+
 from modelo.darkmoon import Albums
 
 def to_menu():

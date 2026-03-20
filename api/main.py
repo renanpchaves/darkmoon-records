@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Query
 from contextlib import asynccontextmanager
-from modelo.darkmoon import Albums
+from models import Albums
 from typing import Optional, List
 import random
 
@@ -32,7 +32,6 @@ def listar_albums():
             "nome": album._nome,
             "artista": album._artista,
             "quant_musicas": album._quant_musicas,
-            "avaliacao_media": album._media_avaliacoes
         }
         for i, album in enumerate(Albums.album,1)
     ]

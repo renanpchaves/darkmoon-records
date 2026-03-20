@@ -1,8 +1,9 @@
 from modelo.rating import Rating
+from modelo import Albums
 from modelo.database import Session, AlbumDB, RatingDB
 
 class Albums:
-    album = []
+    cd = []
 
     def __init__(self, nome, artista, quant_musicas=0):
         self._nome = nome.title()

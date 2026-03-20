@@ -4,7 +4,6 @@ from models import Albums
 from typing import Optional, List
 import random
 
-
 @asynccontextmanager
 async def lifespan(app:FastAPI):
     print("Carregando álbuns do banco...")

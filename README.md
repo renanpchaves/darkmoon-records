@@ -1,14 +1,6 @@
-## 🎵 Darkmoon Records — Sistema de Catálogo de Álbuns ou CDs!
+## 🎵 Darkmoon Records — API para te recomendar um álbum aleatório baseado em gênero!
 
-Sistema criado em python para gerenciamento de um catálogo de álbuns, com controle de estoque, avaliação de usuários e persistência de dados, com SQLite e SQLAlchemy.
-
-Exercício prático, consolidando conhecimentos em:
-
-- Python orientado a objetos
-- Validação de inputs (CLI)
-- Persistência de dados
-- ORM (SQLAlchemy)
-- Relacionamento entre tabelas
+Antes uma aplicação de gerenciamento de albuns, agora uma API desenvolvida em python para recomendar um álbum baseado em gênero, utilizando boas práticas de código, FastAPI e SQLAlchemy.
 
 ## ORM
 
@@ -20,19 +12,13 @@ O projeto utiliza SQLAlchemy, mapeando as classes diretamente para as tabelas do
 | `RatingDB`    | `ratings`  |
 
 
-## Estrutura do Projeto:
+## Desenvolvendo!
 
-| Arquivo/Pasta | Descrição |
-|---------------|-----------|
-| `app.py` | Ponto de entrada da aplicação (menu principal) |
-| `modelo/darkmoon.py` | Classe Albums com lógica de negócio |
-| `modelo/rating.py` | Classe Rating para avaliações |
-| `modelo/database.py` | Configuração do banco SQLite + SQLAlchemy |
-| `darkmoon_records.db` | Banco de dados SQLite |
-| `README.md` | Desc. do projeto |
+Ainda em processo de desenvolvimento da API...
 
 ## ⚙ Tecnologias:
 
-Python 3
-SQLAlchemy
-SQLite
+- Python 3 
+- FastAPI 
+- SQLAlchemy 
+- SQLite 

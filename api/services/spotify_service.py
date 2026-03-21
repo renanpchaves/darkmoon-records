@@ -21,7 +21,7 @@ class SpotifyService:
     def __init__(self):
         self.client_id = os.getenv("SPOTIFY_CLIENT_ID")
         self.client_secret = os.getenv("SPOTIFY_CLIENT_SECRET")
-        self.acess_token = None
+        self.access_token = None
 
         if not self.client_id or not self.client_secret:
             print("⚠️ WARNING: Spotify credentials not found in .env file")
@@ -29,7 +29,7 @@ class SpotifyService:
         else:
             self._authenticate()
 
-    def authenticate(self):
+    def _authenticate(self):
         """
         Authenticate with spotify credentials
         """
@@ -37,37 +37,37 @@ class SpotifyService:
             response = requests.post(
                 self.AUTH_URL,
                 data ={"grant_type": "client_credentials"},
-                auth={self.client_id, self.client_secret},
+                auth=(self.client_id, self.client_secret),
                 timeout=10
             )
             response.raise_for_status()
 
-            self.acess_token = response.json().get("acess_token")
+            self.access_token = response.json().get("access_token")
             print("Authenticated successfully!")
 
         except requests.RequestException as e:
             print(f"Authentication error: {e}")
-            self.acess_token = None
+            self.access_token = None
     @property
     def headers(self):
         """
         Headers with authentication for the requests
         """
         return{
-            "Authorization": f"Bearer {self.acess_token}" if self.acess_token else ""
+            "Authorization": f"Bearer {self.access_token}" if self.access_token else ""
         }
 
     def search_albums_by_genre(self, genre: str, limit: int = 50) -> List[Dict]:
         """
         Search albums by genre on Spotify
         """
-        if not self.acess_token:
+        if not self.access_token:
             print ('Spotify not authenticated, returning empty list.')
             return []
         
         try :
             #search endpoint
-            url = f"self.BASE_URL/search"
+            url = f"{self.BASE_URL}/search"
             params = {
                 "q": f"genre:{genre}",
                 "type": "album",
@@ -91,11 +91,11 @@ class SpotifyService:
 
             processed_albums = []
             for album in albums:
-                details = self._process_album_data(album)
+                details = self._process_album_data(album) #tbd
                 if details:
                     processed_albums.append(details)
 
-                return processed_albums
+            return processed_albums
         except requests.RequestException as e:
             print(f"Error searching spotify: {e}")
             return []

@@ -2,6 +2,7 @@ from fastapi import FastAPI, Query, Depends, HTTPException
 from sqlalchemy.orm import Session
 import random
 # ==================== PROJECT IMPORTS ====================
+
 from models.database import(
     get_db,
     AlbumDB,
@@ -72,6 +73,8 @@ async def recommend_album(
         "popularity": album.popularity, 
         "tracks": album.list_tracks or []  
     }
+
+# ==================== MAIN ==================== 
 
 if __name__ == "__main__":
     import uvicorn

@@ -27,7 +27,6 @@ class AlbumDB(Base):
 
     #album info
     tracks = Column(Integer, default=0)
-    spotify_popularity = Column(Integer,default=0)
 
     #media&links
     image_url = Column(String(1000), nullable=True)
@@ -89,7 +88,8 @@ def save_album(albums_spotify:list, genre:str, db:Session) -> list:
 
     for item in albums_spotify:
         exists = db.query(AlbumDB).filter(
-            AlbumDB.spotify_id == item.get('spotify_id')
+            AlbumDB.name == item.get("name"),
+            AlbumDB.artist == item.get("artist")
         ).first()
 
         if exists:
@@ -101,9 +101,8 @@ def save_album(albums_spotify:list, genre:str, db:Session) -> list:
             name=item.get('name'),
             artist=item.get('artist'),
             release_date=item.get('release_date'),
-            genre=[genre.lower()] + item.get('genre', []),
+            genre=item.get("genre",[genre.lower()]),
             tracks=item.get('tracks', 0),
-            sppotify_popularity=item.get('popularity', 0),
             image_url=item.get('image_url'),
             spotify_id=item.get('spotify_id'),
             spotify_link=item.get('spotify_link'),

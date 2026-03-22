@@ -1,33 +1,32 @@
 from fastapi import FastAPI, Query, Depends, HTTPException
 from sqlalchemy.orm import Session
 import random
-# ==================== PROJECT IMPORTS ====================
 
-from models.database import(
+from models.database import (
     get_db,
-    AlbumDB,
     albums_by_genre,
     save_album,
     list_genres,
     count_albums
 )
-from services.spotify_service import SpotifyService
+from services.music_service import MusicService
 
-spotify = SpotifyService()
+music_service = MusicService()
+
 app = FastAPI(
     title="Darkmoon Records API",
-    description="music catalogue public API",
+    description="Music catalogue public API",
     version="1.0.0",
 )
 
+
 # =================================================
-# ENDPOINTS
+# ROOT
 # =================================================
 
-#root
 @app.get("/")
 async def root():
-    """Página inicial da API"""
+    """API root endpoint."""
     return {
         "message": "🎵 Darkmoon Records - Music Discovery API",
         "version": "1.0.0",
@@ -35,99 +34,66 @@ async def root():
         "example": "/recommend?genre=rock"
     }
 
-# =========================== Populate database ===========================
+
+# =================================================
+# POPULATE DATABASE
+# =================================================
 
 @app.post("/populate")
 async def populate(
-    genre: str = Query(...,description="Genre to populate"),
-    limit: int = Query(50, ge=10, le=200, description="How many albums to fetch"),
-    min_popularity: int=Query(0,ge=0,le=100,description="Mininum popularity (0-100)") ,
+    genre: str = Query(..., description="Genre to populate"),
+    limit: int = Query(50, ge=1, le=100, description="How many albums to fetch"),
     db: Session = Depends(get_db)
 ):
     """
-    Manually populate database with albums
+    Populate the database with albums from Last.fm based on a genre/tag.
 
-    **Parameters:**
-    - genre: Musical genre (rock, jazz, etc)
-
-    Popularity feature:
-    - 0: All albums
-    - 50: Medium popularity
-    - 70: High popularity (popular albums)
-    - 90: Very high popularity (hit albums only)
+    Parameters:
+    - genre: Musical genre/tag (rock, jazz, indie, etc.)
+    - limit: Maximum number of albums to fetch
     """
 
-    print(f"Fetching '{limit}' albums for '{genre}' from Spotify. ")
+    print(f"Fetching '{limit}' albums for genre '{genre}' from Last.fm...")
 
-    fetch_limit = min(limit*2,200)
-    spotify_albums = spotify.search_albums_by_genre(genre,limit=fetch_limit)
-
-    if not spotify_albums:
-        raise HTTPException(
-            404,
-            detail=f"No albums found for '{genre}'"
-        )
-    
-    filtered_albums = [
-        album for album in spotify_albums
-        if album.get('popularity',0) >= min_popularity
-    ]
-
-    if not filtered_albums:
-        raise HTTPException(
-            404,
-            detail=f"No albums found with popularity >= '{min_popularity}' for '{genre}'"
-        )
-    
-    filtered_albums.sort(key=lambda x: x.get('popularity', 0), reverse=True)
-    top_albums = filtered_albums[:limit]
-
-    print(f"Found {len(filtered_albums)} albums with popularity >= {min_popularity}")
-    print(f"Saving top {len(top_albums)} most popular...")
-
-    saved = save_album(top_albums,genre,db)
-    total_now = len(albums_by_genre(genre,db))
-
-    return {
-        "message": f"Successfully populated {genre}",
-        "new_albums": len(saved),
-        "total_albums": total_now,
-        "min_popularity": min_popularity,
-        "popularity_range": {
-            "highest": top_albums[0].get('popularity', 0) if top_albums else 0,
-            "lowest": top_albums[-1].get('popularity', 0) if top_albums else 0
-        }
-    }
-
-# =========================== Listing recommendations ===========================
-
-@app.get("/recommend")
-async def recommend_album(
-    genre: str = Query(..., description="Musical Genre: (ex: rock, jazz, etc)"),
-    db: Session = Depends(get_db)
-):
-    """
-    🎲 Recommends a random album based on chosen genre.
-    
-    >Example: /recommend?genre=rock<
-
-    **Returns:**
-    - Album name and artist
-    - Album cover
-    - Release year
-    - 30s preview of first track
-    - Spotify link
-    - Track list
-    """
-
-    albums = albums_by_genre(genre,db)
+    albums = music_service.search_albums_by_genre(genre, limit=limit)
 
     if not albums:
         raise HTTPException(
             status_code=404,
-            detail=f'No albums for "{genre}" found, populate in route POST /populate?genre={genre}'
+            detail=f"No albums found for genre '{genre}'"
         )
-    
+
+    saved = save_album(albums, genre, db)
+    total_now = len(albums_by_genre(genre, db))
+
+    return {
+        "message": f"Successfully populated genre '{genre}'",
+        "albums_fetched": len(albums),
+        "albums_saved": len(saved),
+        "total_albums_in_genre": total_now
+    }
+
+
+# =================================================
+# RANDOM RECOMMENDATION
+# =================================================
+
+@app.get("/recommend")
+async def recommend_album(
+    genre: str = Query(..., description="Musical genre, e.g. rock, jazz, indie"),
+    db: Session = Depends(get_db)
+):
+    """
+    Recommend a random album from the local database by genre.
+    """
+
+    albums = albums_by_genre(genre, db)
+
+    if not albums:
+        raise HTTPException(
+            status_code=404,
+            detail=f'No albums found for "{genre}". Populate first with POST /populate?genre={genre}'
+        )
 
     album = random.choice(albums)
 
@@ -137,14 +103,38 @@ async def recommend_album(
         "year": album.release_date,
         "genres": album.genre or [],
         "cover_url": album.image_url,
-        "spotify_link": album.spotify_link,
+        "external_link": album.spotify_link,
         "total_tracks": album.tracks,
-        "popularity": album.spotify_popularity,
-        "tracks": album.list_tracks or []  
+        "tracks": album.list_tracks or []
     }
 
+
 # =================================================
-# MAIN 
+# GENRES
+# =================================================
+
+@app.get("/genres")
+async def get_genres(db: Session = Depends(get_db)):
+    """
+    Return all genres currently stored in the database.
+    """
+    return {"genres": list_genres(db)}
+
+
+# =================================================
+# STATS
+# =================================================
+
+@app.get("/stats")
+async def get_stats(db: Session = Depends(get_db)):
+    """
+    Return basic database stats.
+    """
+    return {"total_albums": count_albums(db)}
+
+
+# =================================================
+# MAIN
 # =================================================
 
 if __name__ == "__main__":

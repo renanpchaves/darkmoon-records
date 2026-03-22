@@ -92,7 +92,7 @@ class SpotifyService:
 
             processed_albums = []
             for album in albums:
-                details = self._process_album_data(album) #tbd
+                details = self._process_album_data(album) 
                 if details:
                     processed_albums.append(details)
 
@@ -101,7 +101,7 @@ class SpotifyService:
             print(f"Error searching spotify: {e}")
             return []
         
-    def _processed_album_data(self,album: Dict) -> Optional[Dict]:
+    def _process_album_data(self,album: Dict) -> Optional[Dict]:
         """
         Proccess raw spotify data into DB format
         """
@@ -139,3 +139,38 @@ class SpotifyService:
         except Exception as e:
             print (f"Error proccessing album data: {e}")
             return None
+        
+    def _get_album_tracks(self, album_id: str) -> List[Dict]:
+        """
+        Getting track list for an album
+        """
+        if not self.access_token or not album_id:
+            return []
+        
+        try:
+            url = f"{self.BASE_URL}/albums/{album_id}/tracks"
+            response = requests.get(
+                url,
+                headers=self.headers,
+                params={"limit": 50},
+                timeout=10
+            )
+            response.raise_for_status()
+
+            tracks = response.json().get("items", [])
+
+            #format tracks:
+            formatted_tracks = []
+            for i,track in enumerate(tracks,1):
+                formatted_tracks.append({
+                "number": i,
+                "name": track.get("name"),
+                "duration_ms": track.get("duration_ms", 0),
+                "preview_url": track.get("preview_url")
+                })
+            
+            return formatted_tracks
+        
+        except Exception as e:
+            print(f"Error fetching tracks: {e}")
+            return []

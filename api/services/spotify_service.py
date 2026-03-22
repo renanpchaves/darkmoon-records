@@ -48,6 +48,7 @@ class SpotifyService:
         except requests.RequestException as e:
             print(f"Authentication error: {e}")
             self.access_token = None
+
     @property
     def headers(self):
         """
@@ -99,3 +100,42 @@ class SpotifyService:
         except requests.RequestException as e:
             print(f"Error searching spotify: {e}")
             return []
+        
+    def _processed_album_data(self,album: Dict) -> Optional[Dict]:
+        """
+        Proccess raw spotify data into DB format
+        """
+        try:
+            #extract artists:
+            artists = album.get("artists", [])
+            artist_name = artists[0].get("name","Unknown") if artists else "Unknown"
+
+            #extract images:
+            images = album.get("images",[])
+            image_url = images[0].get("url") if images else None
+
+            #extract release year:
+            release_date = album.get("release_date", "")
+            release_year = None
+            if release_date:
+                release_year=int(release_date.split("-")[0]) if release_date else None
+
+            #get album ID
+            album_id = album.get("id")
+            tracks_data = self._get_album_tracks(album_id) if album_id else []
+
+            return {
+                "name": album.get("name"),
+                "artist": artist_name,
+                "release_date": release_year,
+                "genre": album.get("genres", []),
+                "tracks": album.get("total_tracks", 0),
+                "popularity": album.get("popularity", 0),
+                "image_url": image_url,
+                "spotify_id": album_id,
+                "spotify_link": album.get("external_urls", {}).get("spotify"),
+                "list_tracks": tracks_data
+            }
+        except Exception as e:
+            print (f"Error proccessing album data: {e}")
+            return None

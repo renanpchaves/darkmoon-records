@@ -10,7 +10,6 @@ O projeto utiliza SQLAlchemy, mapeando as classes diretamente para as tabelas do
 | ------------- | ---------- |
 | `AlbumDB`     | `albums`   |
 
-
 ## Desenvolvendo!
 
 Ainda em processo de desenvolvimento da API...

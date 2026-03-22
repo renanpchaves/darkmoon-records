@@ -89,7 +89,7 @@ def save_album(albums_spotify:list, genre:str, db:Session) -> list:
 
     for item in albums_spotify:
         exists = db.query(AlbumDB).filter(
-            AlbumDB.spotify_id == item.get('spotify.id')
+            AlbumDB.spotify_id == item.get('spotify_id')
         ).first()
 
         if exists:
@@ -103,7 +103,7 @@ def save_album(albums_spotify:list, genre:str, db:Session) -> list:
             release_date=item.get('release_date'),
             genre=[genre.lower()] + item.get('genre', []),
             tracks=item.get('tracks', 0),
-            popularity=item.get('popularity', 0),
+            sppotify_popularity=item.get('popularity', 0),
             image_url=item.get('image_url'),
             spotify_id=item.get('spotify_id'),
             spotify_link=item.get('spotify_link'),

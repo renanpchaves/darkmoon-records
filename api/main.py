@@ -41,15 +41,26 @@ async def root():
 async def populate(
     genre: str = Query(...,description="Genre to populate"),
     limit: int = Query(50, ge=10, le=200, description="How many albums to fetch"),
+    min_popularity: int=Query(0,ge=0,le=100,description="Mininum popularity (0-100)") ,
     db: Session = Depends(get_db)
 ):
     """
     Manually populate database with albums
+
+    **Parameters:**
+    - genre: Musical genre (rock, jazz, etc)
+
+    Popularity feature:
+    - 0: All albums
+    - 50: Medium popularity
+    - 70: High popularity (popular albums)
+    - 90: Very high popularity (hit albums only)
     """
 
     print(f"Fetching '{limit}' albums for '{genre}' from Spotify. ")
 
-    spotify_albums = spotify.search_albums_by_genre(genre,limit=limit)
+    fetch_limit = min(limit*2,200)
+    spotify_albums = spotify.search_albums_by_genre(genre,limit=fetch_limit)
 
     if not spotify_albums:
         raise HTTPException(
@@ -57,13 +68,35 @@ async def populate(
             detail=f"No albums found for '{genre}'"
         )
     
-    saved = save_album(spotify_albums,genre,db)
+    filtered_albums = [
+        album for album in spotify_albums
+        if album.get('popularity',0) >= min_popularity
+    ]
+
+    if not filtered_albums:
+        raise HTTPException(
+            404,
+            detail=f"No albums found with popularity >= '{min_popularity}' for '{genre}'"
+        )
+    
+    filtered_albums.sort(key=lambda x: x.get('popularity', 0), reverse=True)
+    top_albums = filtered_albums[:limit]
+
+    print(f"Found {len(filtered_albums)} albums with popularity >= {min_popularity}")
+    print(f"Saving top {len(top_albums)} most popular...")
+
+    saved = save_album(top_albums,genre,db)
     total_now = len(albums_by_genre(genre,db))
 
     return {
         "message": f"Successfully populated {genre}",
         "new_albums": len(saved),
-        "total_albums": total_now
+        "total_albums": total_now,
+        "min_popularity": min_popularity,
+        "popularity_range": {
+            "highest": top_albums[0].get('popularity', 0) if top_albums else 0,
+            "lowest": top_albums[-1].get('popularity', 0) if top_albums else 0
+        }
     }
 
 # =========================== Listing recommendations ===========================

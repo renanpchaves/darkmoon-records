@@ -154,11 +154,8 @@ class MusicService:
             "artist": artist_name,
             "release_date": None,          # Not reliably provided here
             "genre": [genre],
-            "tracks": 0,                   # Not provided by tag.getTopAlbums
             "image_url": image_url,
-            "spotify_id": mbid,            # Temporary unique external id slot
-            "spotify_link": lastfm_url,    # Reusing this field for an external album link
-            "list_tracks": []
+            "external_link": lastfm_url,  
         }
 
     @staticmethod

@@ -103,9 +103,7 @@ async def recommend_album(
         "year": album.release_date,
         "genres": album.genre or [],
         "cover_url": album.image_url,
-        "external_link": album.spotify_link,
-        "total_tracks": album.tracks,
-        "tracks": album.list_tracks or []
+        "external_link": album.external_link,
     }
 
 

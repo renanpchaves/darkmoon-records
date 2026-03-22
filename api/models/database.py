@@ -30,8 +30,8 @@ class AlbumDB(Base):
 
     #media&links
     image_url = Column(String(1000), nullable=True)
-    spotify_id = Column(String(100),nullable=True,index=True)
-    spotify_link=Column(String(1000),nullable=True)
+    external_id = Column(String(100),nullable=True,index=True)
+    external_link=Column(String(1000),nullable=True)
 
     #Tracks: (JSON with song lists)
     list_tracks = Column(JSON, default=list)
@@ -80,13 +80,13 @@ def albums_by_genre(genre:str,db:Session) -> list:
         AlbumDB.genre.contains([genre.lower()])
     ).all()
 
-def save_album(albums_spotify:list, genre:str, db:Session) -> list:
+def save_album(albums_external:list, genre:str, db:Session) -> list:
     """
-    Save spotify albums to database TBD
+    Save external albums to database TBD
     """
     saved_albums = []
 
-    for item in albums_spotify:
+    for item in albums_external:
         exists = db.query(AlbumDB).filter(
             AlbumDB.name == item.get("name"),
             AlbumDB.artist == item.get("artist")
@@ -104,8 +104,8 @@ def save_album(albums_spotify:list, genre:str, db:Session) -> list:
             genre=item.get("genre",[genre.lower()]),
             tracks=item.get('tracks', 0),
             image_url=item.get('image_url'),
-            spotify_id=item.get('spotify_id'),
-            spotify_link=item.get('spotify_link'),
+            external_id=item.get('external_id'),
+            external_link=item.get('external_link'),
             list_tracks=item.get('list_tracks', [])
         )
 

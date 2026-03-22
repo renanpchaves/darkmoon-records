@@ -9,7 +9,6 @@ O projeto utiliza SQLAlchemy, mapeando as classes diretamente para as tabelas do
 | Classe Python | Tabela SQL |
 | ------------- | ---------- |
 | `AlbumDB`     | `albums`   |
-| `RatingDB`    | `ratings`  |
 
 
 ## Desenvolvendo!

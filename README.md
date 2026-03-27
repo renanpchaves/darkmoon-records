@@ -36,7 +36,7 @@ pip install -r ../requirements.txt
 
 ### 3. Execute a API
 ```bash
-python main.py
+python -m main
 ```
 
 Servidor rodando em: **http://localhost:8000**

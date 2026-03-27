@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 import random
 
 from models.database import (
+    AlbumDB,
     get_db,
     albums_by_genre,
     save_album,
@@ -96,16 +97,38 @@ async def recommend_album(
         )
 
     album = random.choice(albums)
+    return album
 
-    return {
-        "album": album.name,
-        "artist": album.artist,
-        "year": album.release_date,
-        "genres": album.genre or [],
-        "cover_url": album.image_url,
-        "external_link": album.external_link,
-    }
+# =================================================
+# LIST ALL ALBUMS IN DB
+# =================================================
 
+@app.get("/albums")
+async def list_albums(db: Session = Depends(get_db)):
+    """
+    Return a list of all albums currently stored in the database.
+    """
+    albums = db.query(AlbumDB).all()
+    return {"albums": albums} 
+    
+# =================================================
+# DELETE ALBUM BY ID
+# =================================================
+
+@app.delete("/albums/{album_id}")
+async def delete_album(album_id: int, db: Session = Depends(get_db)):
+    """
+    Delete an album from the database by its ID.
+    """
+    album = db.query(AlbumDB).filter(AlbumDB.id == album_id).first()
+
+    if not album:
+        raise HTTPException(status_code=404, detail="Album not found")
+    
+    db.delete(album)
+    db.commit()
+    return f"Album '{album.name}' by '{album.artist}' deleted successfully."
+    
 
 # =================================================
 # GENRES

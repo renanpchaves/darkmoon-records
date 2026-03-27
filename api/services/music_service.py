@@ -152,7 +152,6 @@ class MusicService:
         return {
             "name": album_name,
             "artist": artist_name,
-            "release_date": None,          # Not reliably provided here
             "genre": [genre],
             "image_url": image_url,
             "external_link": lastfm_url,  

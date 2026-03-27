@@ -1,40 +1,115 @@
-## 🎵 Darkmoon Records — API para te recomendar um álbum aleatório baseado em gênero!
+## 🎵 Darkmoon Records — Music Discovery API
 
-Antes uma aplicação de gerenciamento de albuns, agora uma API desenvolvida em python para recomendar um álbum baseado em gênero, utilizando boas práticas de código, FastAPI e SQLAlchemy.
+Uma API robusta para descobrir e recomendar álbuns musicais aleatórios baseado em gênero. Inicia com dados da Last.fm e recomenda do catálogo local com busca otimizada.
 
-## ORM
+**Status:** v1.0.0 — Em desenvolvimento ativo 🚀
 
-O projeto utiliza SQLAlchemy, mapeando as classes diretamente para as tabelas do banco.
+---
 
-## Desenvolvendo!
+## 🎯 Funcionalidades
 
-Versão 1.0.0 out, mas ainda tenho algumas ideias pra implementar na API.
+- ✅ **Recomendação Aleatória** — Retorna um álbum aleatório de um gênero específico
+- 🔍 **Integração Last.fm** — Popula banco de dados com álbuns reais via API
+- 📊 **Busca por Gênero** — Filtra álbuns com índices otimizados
+- 🗄️ **Persistência Local** — SQLite com SQLAlchemy ORM
+- 📚 **Documentação Interativa** — Swagger/OpenAPI automático
 
-## 🚀 Como executar o projeto
+---
 
-Siga os passos abaixo para rodar a API:
+## 🚀 Quick Start
 
-1. git clone https://github.com/renanpchaves/darkmoon-records
-2. cd darkmoon-records/api
-3. Crie e ative um ambiente virtual (opcional, mas recomendado):
+### 1. Clone e navegue
+```bash
+git clone https://github.com/renanpchaves/darkmoon-records
+cd darkmoon-records/api
+```
 
+### 2. Setup do Ambiente
+```powershell
+# Crie e ative um ambiente virtual
 python -m venv venv
 venv\Scripts\activate.ps1
 
-4. Instale as dependências: pip install -r requirements.txt
-5. Execute a aplicação: python main.py
+# Instale dependências
+pip install -r ../requirements.txt
+```
 
-## 📡 Acessando a API
+### 3. Execute a API
+```bash
+python main.py
+```
 
-Após iniciar o servidor, você pode acessar:
+Servidor rodando em: **http://localhost:8000**
 
-🔹 Documentação interativa (Swagger): 
 
+---
+
+## 📚 Documentação Interativa
+
+Acesse o Swagger UI após iniciar a API:
+
+```
 http://localhost:8000/docs
+```
 
-## ⚙ Tecnologias:
+Todos os endpoints podem ser testados diretamente pela interface! 🎮
 
-- Python 3 
-- FastAPI 
-- SQLAlchemy 
-- SQLite 
+---
+
+## 🗄️ Estrutura do Banco de Dados
+
+### Tabela: `albums`
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `id` | Integer | Primary Key |
+| `name` | String | Nome do álbum |
+| `artist` | String | Artista |
+| `genre` | JSON | Lista de gêneros (ex: ["rock", "progressive"]) |
+| `image_url` | String | URL da capa |
+| `external_id` | String | ID Last.fm |
+| `external_link` | String | Link Last.fm |
+
+---
+
+## ⚙️ Tech Stack
+
+| Tecnologia | Versão | Uso |
+|------------|--------|-----|
+| **Python** | 3.9+ | Runtime |
+| **FastAPI** | 0.104+ | Framework Web |
+| **SQLAlchemy** | 2.0+ | ORM |
+| **SQLite** | 3 | Database Local |
+| **Pydantic** | 2.0+ | Validação |
+
+---
+
+## 🔮 Roadmap (Próximas Versões)
+
+- [ ] 🔐 Autenticação de usuários
+- [ ] 💾 Histórico de recomendações
+- [ ] 🎨 Frontend web
+
+---
+
+## 🛠️ Desenvolvimento
+
+### Estrutura do Projeto
+```
+api/
+├── main.py                 # Endpoints da API
+├── models/
+│   └── database.py         # Configuração SQLAlchemy
+├── services/
+│   └── music_service.py    # Integração Last.fm
+└── darkmoon_records.db     # SQLite (gerado)
+```
+
+### Rodar com Hot Reload
+```bash
+pip install uvicorn
+uvicorn main:app --reload
+```
+
+---
+
+**Made with 🎵 by Renan Chaves** 

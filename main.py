@@ -26,8 +26,16 @@ app = FastAPI(
 # =================================================
 
 @app.get("/")
-async def root():
-    """API root endpoint."""
+def root():
+    """Endpoint raiz da API.
+    
+    Retorna informações básicas sobre a API Darkmoon Records, incluindo
+    versão, documentação e exemplos de uso.
+    
+    Returns:
+        dict: Dicionário contendo mensagem de boas-vindas, versão, 
+              URL da documentação e exemplo de uso.
+    """
     return {
         "message": "🎵 Darkmoon Records - Music Discovery API",
         "version": "1.0.0",
@@ -41,19 +49,30 @@ async def root():
 # =================================================
 
 @app.post("/populate")
-async def populate(
+def populate(
     genre: str = Query(..., description="Genre to populate"),
     limit: int = Query(50, ge=1, le=100, description="How many albums to fetch"),
     db: Session = Depends(get_db)
 ):
+    """Popula o banco de dados com álbuns de um gênero específico.
+    
+    Busca álbuns no Last.fm para um gênero específico e os armazena
+    no banco de dados. Se o gênero já contiver álbuns, novos álbuns
+    serão adicionados aos existentes.
+    
+    Args:
+        genre (str): Gênero musical a ser populado (ex: 'rock', 'jazz').
+        limit (int): Número de álbuns a serem buscados. Deve estar 
+                    entre 1 e 100. Padrão: 50.
+        db (Session): Sessão do banco de dados (injetada automaticamente).
+    
+    Returns:
+        dict: Dicionário com informações de sucesso, incluindo:
+              - message (str): Mensagem de sucesso.
+              - albums_fetched (int): Número de álbuns buscados.
+              - albums_saved (int): Número de álbuns salvos.
+              - total_albums_in_genre (int): Total de álbuns do gênero.
     """
-    Populate the database with albums from Last.fm based on a genre/tag.
-
-    Parameters:
-    - genre: Musical genre/tag (rock, jazz, indie, etc.)
-    - limit: Maximum number of albums to fetch
-    """
-
     print(f"Fetching '{limit}' albums for genre '{genre}' from Last.fm...")
 
     albums = music_service.search_albums_by_genre(genre, limit=limit)
@@ -80,14 +99,23 @@ async def populate(
 # =================================================
 
 @app.get("/recommend")
-async def recommend_album(
+def recommend_album(
     genre: str = Query(..., description="Musical genre, e.g. rock, jazz, indie"),
     db: Session = Depends(get_db)
 ):
+    """Recomenda um álbum aleatório de um gênero específico.
+    
+    Busca todos os álbuns de um gênero no banco de dados e retorna
+    um aleatoriamente. Útil para descoberta musical.
+    
+    Args:
+        genre (str): Gênero musical desejado (ex: 'rock', 'jazz', 'indie').
+        db (Session): Sessão do banco de dados (injetada automaticamente).
+    
+    Returns:
+        AlbumDB: Objeto de álbum aleatório contendo dados como
+               nome, artista e gênero.
     """
-    Recommend a random album from the local database by genre.
-    """
-
     albums = albums_by_genre(genre, db)
 
     if not albums:
@@ -104,9 +132,18 @@ async def recommend_album(
 # =================================================
 
 @app.get("/albums")
-async def list_albums(db: Session = Depends(get_db)):
-    """
-    Return a list of all albums currently stored in the database.
+def list_albums(db: Session = Depends(get_db)):
+    """Lista todos os álbuns armazenados no banco de dados.
+    
+    Retorna uma lista completa de todos os álbuns cadastrados,
+    com informações como nome, artista e gênero.
+    
+    Args:
+        db (Session): Sessão do banco de dados (injetada automaticamente).
+    
+    Returns:
+        dict: Dicionário contendo a chave 'albums' com lista de
+              todos os objetos AlbumDB armazenados.
     """
     albums = db.query(AlbumDB).all()
     return {"albums": albums} 
@@ -116,9 +153,18 @@ async def list_albums(db: Session = Depends(get_db)):
 # =================================================
 
 @app.delete("/albums/{album_id}")
-async def delete_album(album_id: int, db: Session = Depends(get_db)):
-    """
-    Delete an album from the database by its ID.
+def delete_album(album_id: int, db: Session = Depends(get_db)):
+    """Deleta um álbum específico do banco de dados.
+    
+    Remove permanentemente um álbum identificado pelo seu ID.
+    
+    Args:
+        album_id (int): ID único do álbum a ser deletado.
+        db (Session): Sessão do banco de dados (injetada automaticamente).
+    
+    Returns:
+        dict: Dicionário contendo a mensagem de confirmação indicando 
+              qual álbum foi deletado (nome e artista).
     """
     album = db.query(AlbumDB).filter(AlbumDB.id == album_id).first()
 
@@ -127,7 +173,7 @@ async def delete_album(album_id: int, db: Session = Depends(get_db)):
     
     db.delete(album)
     db.commit()
-    return f"Album '{album.name}' by '{album.artist}' deleted successfully."
+    return {"message": f"Album '{album.name}' by '{album.artist}' deleted successfully."}
     
 
 # =================================================
@@ -135,9 +181,18 @@ async def delete_album(album_id: int, db: Session = Depends(get_db)):
 # =================================================
 
 @app.get("/genres")
-async def get_genres(db: Session = Depends(get_db)):
-    """
-    Return all genres currently stored in the database.
+def get_genres(db: Session = Depends(get_db)):
+    """Retorna lista de todos os gêneros disponíveis no banco de dados.
+    
+    Obtém uma lista única de todos os gêneros que possuem álbuns
+    cadastrados na aplicação.
+    
+    Args:
+        db (Session): Sessão do banco de dados (injetada automaticamente).
+    
+    Returns:
+        dict: Dicionário contendo a chave 'genres' com lista de strings
+              representando gêneros únicos disponíveis.
     """
     return {"genres": list_genres(db)}
 
@@ -147,9 +202,18 @@ async def get_genres(db: Session = Depends(get_db)):
 # =================================================
 
 @app.get("/stats")
-async def get_stats(db: Session = Depends(get_db)):
-    """
-    Return basic database stats.
+def get_stats(db: Session = Depends(get_db)):
+    """Retorna estatísticas básicas do banco de dados.
+    
+    Fornece informações gerais sobre o estado da aplicação,
+    como número total de álbuns cadastrados.
+    
+    Args:
+        db (Session): Sessão do banco de dados (injetada automaticamente).
+    
+    Returns:
+        dict: Dicionário contendo a chave 'total_albums' com
+              o número inteiro de álbuns armazenados.
     """
     return {"total_albums": count_albums(db)}
 

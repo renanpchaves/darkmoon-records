@@ -225,17 +225,12 @@ def get_stats(db: Session = Depends(get_db)):
 if __name__ == "__main__":
     import uvicorn
 
-    print("""
-    ╔════════════════════════════════════════════╗
-    ║  🎵 Darkmoon Records API                   ║
-    ║                                            ║
-    ║  📖 Docs: http://localhost:8000/docs       ║
-    ║  🎲 Test: /recommend?genre=rock            ║
-    ╚════════════════════════════════════════════╝
-    """)
+    print("🎵 Darkmoon Records API starting...")
+    print("📖 Docs: http://localhost:8000/docs")
+    print("🎲 Test: /recommend?genre=rock")
 
     uvicorn.run(
-        "main:app",
+        "src.main:app",
         host="0.0.0.0",
         port=8000,
         reload=True

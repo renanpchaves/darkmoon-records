@@ -5,7 +5,6 @@ Database configuration and models
 from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session, relationship
-from datetime import datetime
 
 #Base for models
 Base = declarative_base()
@@ -120,7 +119,7 @@ def list_genres(db:Session) -> list:
     genres = set()
 
     for album in albums:
-        if album.genre:
-            genres.update(album.genre)
+        for genre in album.genre:
+            genres.add(genre)
 
-    return sorted(list(genres))
+    return list(genres) 

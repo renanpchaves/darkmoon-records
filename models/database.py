@@ -2,57 +2,60 @@
 Database configuration and models
 """
 
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey, JSON
+from sqlalchemy import create_engine, Column, Integer, String, JSON
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session, relationship
+from sqlalchemy.orm import sessionmaker, Session
 
-#Base for models
+# Base for models
 Base = declarative_base()
 
 # ==================== MODELS ====================
+
 
 class AlbumDB(Base):
     """
     Model for picking your album
     """
-    __tablename__ = 'albums'
+
+    __tablename__ = "albums"
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False, index=True)
     artist = Column(String, nullable=False, index=True)
 
-    #media&links
+    # media&links
     image_url = Column(String(1000), nullable=True)
-    external_id = Column(String(100),nullable=True,index=True)
-    external_link=Column(String(1000),nullable=True)
+    external_link = Column(String(1000), nullable=True)
 
-    #Genres: (JSON with genre list)
+    # Genres: (JSON with genre list)
     genre = Column(JSON, default=list)
 
     def __repr__(self):
-        return f"<Album(id={self.id}, nome='{self.name}', artiista='{self.artist}')>"
+        return f"<Album(id={self.id}, nome='{self.name}', artista='{self.artist}')>"
+
 
 # ==================== DATABASE CONFIG ====================
 
 DATABASE_URL = "sqlite:///darkmoon_records.db"
 
 engine = create_engine(
-    DATABASE_URL, 
-    echo=False, #True for SQL debugging
-    connect_args={"check_same_thread": False} 
-    )
+    DATABASE_URL,
+    echo=False,  # True for SQL debugging
+    connect_args={"check_same_thread": False},
+)
 
-#Creating all tables...
+# Creating all tables...
 Base.metadata.create_all(engine)
 
-#Session factory
+# Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # ==================== DEPENDENCIES ====================
 
+
 def get_db():
     """
-    
+
     Dependency for FastAPI - database session
 
     """
@@ -63,40 +66,43 @@ def get_db():
     finally:
         db.close()
 
+
 # ==================== HELPER FUNCTIONS ====================
 
-def albums_by_genre(genre:str,db:Session) -> list:
+
+def albums_by_genre(genre: str, db: Session) -> list:
     """
     Search for albums in database by genre
     """
-    return db.query(AlbumDB).filter(
-        AlbumDB.genre.contains([genre.lower()])
-    ).all()
+    return db.query(AlbumDB).filter(AlbumDB.genre.contains([genre.lower()])).all()
 
-def save_album(albums_external:list, genre:str, db:Session) -> list:
+
+def save_album(albums_external: list, genre: str, db: Session) -> list:
     """
     Save external albums to database TBD
     """
     saved_albums = []
 
     for item in albums_external:
-        exists = db.query(AlbumDB).filter(
-            AlbumDB.name == item.get("name"),
-            AlbumDB.artist == item.get("artist")
-        ).first()
+        exists = (
+            db.query(AlbumDB)
+            .filter(
+                AlbumDB.name == item.get("name"), AlbumDB.artist == item.get("artist")
+            )
+            .first()
+        )
 
         if exists:
             saved_albums.append(exists)
             continue
 
-        #Create new album
+        # Create new album
         new_album = AlbumDB(
-            name=item.get('name'),
-            artist=item.get('artist'),
-            genre=item.get("genre",[genre.lower()]),
-            image_url=item.get('image_url'),
-            external_id=item.get('external_id'),
-            external_link=item.get('external_link'),
+            name=item.get("name"),
+            artist=item.get("artist"),
+            genre=item.get("genre", [genre.lower()]),
+            image_url=item.get("image_url"),
+            external_link=item.get("external_link"),
         )
 
         db.add(new_album)
@@ -105,13 +111,15 @@ def save_album(albums_external:list, genre:str, db:Session) -> list:
     db.commit()
     return saved_albums
 
-def count_albums(db:Session) -> int:
+
+def count_albums(db: Session) -> int:
     """
     Total albums in database
     """
     return db.query(AlbumDB).count()
 
-def list_genres(db:Session) -> list:
+
+def list_genres(db: Session) -> list:
     """
     List all unique possible genres in database
     """
@@ -122,4 +130,4 @@ def list_genres(db:Session) -> list:
         for genre in album.genre:
             genres.add(genre)
 
-    return list(genres) 
+    return list(genres)

@@ -147,7 +147,6 @@ class MusicService:
 
         image_url = self._extract_best_lastfm_image(item.get("image", []))
         lastfm_url = item.get("url")
-        mbid = item.get("mbid") or None
 
         return {
             "name": album_name,

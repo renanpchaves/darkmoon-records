@@ -2,6 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Query, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 import random
 
@@ -56,20 +57,24 @@ def root():
 # =================================================
 
 
+class TokenRequest(BaseModel):
+    api_key: str
+
+
 @app.post("/auth/token")
-def get_token(api_key: str = Query(..., description="Admin API key")):
+def get_token(body: TokenRequest):
     """Gera um JWT de acesso para rotas protegidas.
 
     Valida a ADMIN_API_KEY e retorna um token JWT válido por 24 horas.
     Use o token no header: Authorization: Bearer <token>
 
     Args:
-        api_key (str): Chave de admin definida em ADMIN_API_KEY no .env.
+        body (TokenRequest): JSON body com o campo api_key.
 
     Returns:
         dict: Dicionário com access_token e token_type.
     """
-    if api_key != os.getenv("ADMIN_API_KEY"):
+    if body.api_key != os.getenv("ADMIN_API_KEY"):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API key",

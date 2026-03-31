@@ -8,8 +8,11 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 load_dotenv()
 
-JWT_SECRET = os.getenv("JWT_SECRET")
-ADMIN_API_KEY = os.getenv("ADMIN_API_KEY")
+_jwt_secret = os.getenv("JWT_SECRET")
+if not _jwt_secret:
+    raise RuntimeError("JWT_SECRET environment variable is not set")
+JWT_SECRET: str = _jwt_secret
+
 ALGORITHM = "HS256"
 TOKEN_EXPIRE_HOURS = 24
 
@@ -17,6 +20,7 @@ bearer_scheme = HTTPBearer()
 
 
 def create_access_token() -> str:
+    # Single admin token — system is single-user by design
     payload = {
         "sub": "admin",
         "exp": datetime.now(timezone.utc) + timedelta(hours=TOKEN_EXPIRE_HOURS),

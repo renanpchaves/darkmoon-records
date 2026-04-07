@@ -126,7 +126,7 @@
 
   function renderAlbumCard(album) {
     const cover = album.image_url
-      ? `<img class="album-cover" src="${album.image_url}" alt="${escapeHtml(album.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      ? `<img class="album-cover" src="${escapeHtml(album.image_url)}" alt="${escapeHtml(album.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
       : '';
     const placeholder = `<div class="album-cover-placeholder" ${album.image_url ? 'style="display:none"' : ''}>🎵</div>`;
 
@@ -134,8 +134,10 @@
       ? album.genre.map(g => `<span class="tag">${escapeHtml(g)}</span>`).join('')
       : `<span class="tag">${escapeHtml(album.genre)}</span>`;
 
-    const link = album.external_link
-      ? `<a class="album-link" href="${album.external_link}" target="_blank" rel="noopener">Ver no Last.fm →</a>`
+    const safeLink = album.external_link && /^https?:\/\//.test(album.external_link)
+      ? album.external_link : null;
+    const link = safeLink
+      ? `<a class="album-link" href="${safeLink}" target="_blank" rel="noopener noreferrer">Ver no Last.fm →</a>`
       : '';
 
     document.getElementById('album-card-wrap').innerHTML = `
@@ -187,7 +189,7 @@
 
       content.innerHTML = albums.map(a => {
         const thumb = a.image_url
-          ? `<img class="album-row-thumb" src="${a.image_url}" alt="" onerror="this.src=''">`
+          ? `<img class="album-row-thumb" src="${escapeHtml(a.image_url)}" alt="" onerror="this.src=''">`
           : `<div class="album-row-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem">🎵</div>`;
 
         const genres = Array.isArray(a.genre) ? a.genre.join(', ') : a.genre;

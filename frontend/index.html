@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Darkmoon Records</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <h1>Darkmoon <span>Records</span></h1>
+  </div>
+  <nav>
+    <a href="admin.html">Admin</a>
+  </nav>
+</header>
+
+<main>
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="label">Total de álbuns</div>
+      <div class="value" id="total-albums">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">Gêneros disponíveis</div>
+      <div class="value" id="total-genres">—</div>
+    </div>
+  </div>
+
+  <!-- DISCOVER -->
+  <p class="section-title">Descobrir</p>
+  <div class="discover-controls">
+    <select id="genre-select">
+      <option value="">Carregando gêneros...</option>
+    </select>
+    <button class="btn btn-primary" id="btn-discover" onclick="discover()">
+      Recomendar álbum
+    </button>
+  </div>
+
+  <div id="album-card-wrap"></div>
+
+  <div id="discover-feedback" class="feedback"></div>
+
+  <!-- ALL ALBUMS -->
+  <div class="albums-section">
+    <div class="albums-toggle">
+      <p class="section-title" style="margin-bottom:0">Todos os álbuns</p>
+      <button class="btn btn-secondary" onclick="toggleAlbums()">Mostrar</button>
+    </div>
+
+    <div id="albums-list" class="albums-list">
+      <div class="album-table-wrap">
+        <div id="albums-content">
+          <div class="empty-state">
+            <div class="icon">🎵</div>
+            <p>Clique em "Mostrar" para listar os álbuns</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const API = 'http://localhost:8000';
+  let albumsVisible = false;
+  let genresList = [];
+
+  async function init() {
+    const [stats, genres] = await Promise.all([
+      fetch(`${API}/stats`).then(r => r.json()).catch(() => null),
+      fetch(`${API}/genres`).then(r => r.json()).catch(() => null),
+    ]);
+
+    if (stats) {
+      document.getElementById('total-albums').textContent = stats.total_albums;
+    }
+
+    if (genres && genres.genres.length > 0) {
+      genresList = genres.genres;
+      document.getElementById('total-genres').textContent = genres.genres.length;
+
+      const sel = document.getElementById('genre-select');
+      sel.innerHTML = genres.genres
+        .map(g => `<option value="${g}">${capitalize(g)}</option>`)
+        .join('');
+    } else {
+      document.getElementById('genre-select').innerHTML =
+        '<option value="">Nenhum gênero disponível</option>';
+      document.getElementById('total-genres').textContent = '0';
+    }
+  }
+
+  async function discover() {
+    const genre = document.getElementById('genre-select').value;
+    if (!genre) return;
+
+    const btn = document.getElementById('btn-discover');
+    const feedback = document.getElementById('discover-feedback');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>';
+    feedback.className = 'feedback';
+
+    try {
+      const res = await fetch(`${API}/recommend?genre=${encodeURIComponent(genre)}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        showFeedback(feedback, 'error', data.detail || 'Erro ao buscar recomendação.');
+        document.getElementById('album-card-wrap').innerHTML = '';
+        return;
+      }
+
+      renderAlbumCard(data);
+    } catch {
+      showFeedback(feedback, 'error', 'Não foi possível conectar à API. Verifique se o backend está rodando.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Recomendar álbum';
+    }
+  }
+
+  function renderAlbumCard(album) {
+    const cover = album.image_url
+      ? `<img class="album-cover" src="${album.image_url}" alt="${escapeHtml(album.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+      : '';
+    const placeholder = `<div class="album-cover-placeholder" ${album.image_url ? 'style="display:none"' : ''}>🎵</div>`;
+
+    const genres = Array.isArray(album.genre)
+      ? album.genre.map(g => `<span class="tag">${escapeHtml(g)}</span>`).join('')
+      : `<span class="tag">${escapeHtml(album.genre)}</span>`;
+
+    const link = album.external_link
+      ? `<a class="album-link" href="${album.external_link}" target="_blank" rel="noopener">Ver no Last.fm →</a>`
+      : '';
+
+    document.getElementById('album-card-wrap').innerHTML = `
+      <div class="album-card">
+        ${cover}${placeholder}
+        <div class="album-info">
+          <h2>${escapeHtml(album.name)}</h2>
+          <div class="artist">${escapeHtml(album.artist)}</div>
+          <div class="genre-tags">${genres}</div>
+          ${link}
+        </div>
+      </div>
+    `;
+  }
+
+  async function toggleAlbums() {
+    const list = document.getElementById('albums-list');
+    const btn = event.target;
+
+    if (!albumsVisible) {
+      albumsVisible = true;
+      list.classList.add('visible');
+      btn.textContent = 'Ocultar';
+      await loadAlbums();
+    } else {
+      albumsVisible = false;
+      list.classList.remove('visible');
+      btn.textContent = 'Mostrar';
+    }
+  }
+
+  async function loadAlbums() {
+    const content = document.getElementById('albums-content');
+    content.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+
+    try {
+      const res = await fetch(`${API}/albums`);
+      const data = await res.json();
+      const albums = data.albums || [];
+
+      if (albums.length === 0) {
+        content.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">🎵</div>
+            <p>Nenhum álbum cadastrado. Use o painel <a href="admin.html" style="color:var(--accent)">Admin</a> para popular.</p>
+          </div>`;
+        return;
+      }
+
+      content.innerHTML = albums.map(a => {
+        const thumb = a.image_url
+          ? `<img class="album-row-thumb" src="${a.image_url}" alt="" onerror="this.src=''">`
+          : `<div class="album-row-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem">🎵</div>`;
+
+        const genres = Array.isArray(a.genre) ? a.genre.join(', ') : a.genre;
+        return `
+          <div class="album-row">
+            ${thumb}
+            <div class="album-row-info">
+              <div class="album-row-name">${escapeHtml(a.name)}</div>
+              <div class="album-row-artist">${escapeHtml(a.artist)}</div>
+            </div>
+            <div class="album-row-genres">${escapeHtml(genres)}</div>
+          </div>`;
+      }).join('');
+    } catch {
+      content.innerHTML = `<div class="empty-state"><p>Erro ao carregar álbuns.</p></div>`;
+    }
+  }
+
+  function showFeedback(el, type, msg) {
+    el.textContent = msg;
+    el.className = `feedback ${type} visible`;
+  }
+
+  function capitalize(s) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  init();
+</script>
+
+</body>
+</html>

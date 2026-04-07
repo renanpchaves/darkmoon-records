@@ -2,6 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, Query, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 import random
@@ -15,7 +16,7 @@ from models.database import (
     count_albums,
 )
 from services.music_service import MusicService
-from src.auth import create_access_token, verify_token
+from auth.auth import create_access_token, verify_token
 
 load_dotenv()
 
@@ -25,6 +26,13 @@ app = FastAPI(
     title="Darkmoon Records API",
     description="Music catalogue public API",
     version="1.0.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -279,4 +287,4 @@ if __name__ == "__main__":
     print("📖 Docs: http://localhost:8000/docs")
     print("🎲 Test: /recommend?genre=rock")
 
-    uvicorn.run("src.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=5500, log_level="info")

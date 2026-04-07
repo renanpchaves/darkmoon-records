@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Darkmoon Records</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <h1>Darkmoon <span>Records</span></h1>
+  </div>
+  <nav>
+    <a href="index.html">← Voltar</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- AUTH -->
+  <div class="auth-section">
+    <h2>Autenticação</h2>
+    <div class="auth-form" id="auth-form">
+      <input type="password" id="api-key-input" placeholder="Admin API Key" />
+      <button class="btn btn-primary" onclick="login()">Entrar</button>
+    </div>
+    <span class="auth-status hidden" id="auth-status">Autenticado</span>
+    <div id="auth-feedback" class="feedback"></div>
+  </div>
+
+  <!-- POPULATE -->
+  <div class="admin-section" id="section-populate">
+    <h2>Popular gênero</h2>
+    <div class="populate-form">
+      <input type="text" id="populate-genre" placeholder="Gênero (ex: rock, jazz)" style="flex:1;min-width:160px" />
+      <label>Limite</label>
+      <input type="number" id="populate-limit" value="50" min="1" max="100" />
+      <button class="btn btn-primary" onclick="populate()">Popular</button>
+    </div>
+    <div id="populate-feedback" class="feedback"></div>
+  </div>
+
+  <!-- ALBUMS MANAGEMENT -->
+  <div class="admin-section" id="section-albums">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <h2 style="margin-bottom:0">Gerenciar álbuns</h2>
+      <button class="btn btn-secondary" onclick="loadAdminAlbums()">Atualizar</button>
+    </div>
+
+    <div class="album-table-wrap">
+      <div id="admin-albums-content">
+        <div class="empty-state">
+          <div class="icon">🔐</div>
+          <p>Faça login para gerenciar os álbuns</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const API = 'http://localhost:8000';
+  let token = localStorage.getItem('dm_token');
+
+  function setAuthenticated() {
+    document.getElementById('auth-form').style.display = 'none';
+    document.getElementById('auth-status').classList.remove('hidden');
+    document.getElementById('section-populate').classList.add('visible');
+    document.getElementById('section-albums').classList.add('visible');
+  }
+
+  // Restore session if token already saved
+  if (token) {
+    setAuthenticated();
+    loadAdminAlbums();
+  }
+
+  async function login() {
+    const key = document.getElementById('api-key-input').value.trim();
+    const feedback = document.getElementById('auth-feedback');
+    if (!key) return;
+
+    feedback.className = 'feedback';
+
+    try {
+      const res = await fetch(`${API}/auth/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: key }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showFeedback(feedback, 'error', data.detail || 'API Key inválida.');
+        return;
+      }
+
+      token = data.access_token;
+      localStorage.setItem('dm_token', token);
+
+      document.getElementById('api-key-input').value = '';
+      setAuthenticated();
+      showFeedback(feedback, 'success', 'Login realizado. Token válido por 24 horas.');
+      loadAdminAlbums();
+    } catch {
+      showFeedback(feedback, 'error', 'Erro ao conectar na API.');
+    }
+  }
+
+  async function populate() {
+    const genre = document.getElementById('populate-genre').value.trim();
+    const limit = parseInt(document.getElementById('populate-limit').value) || 50;
+    const feedback = document.getElementById('populate-feedback');
+
+    if (!genre) {
+      showFeedback(feedback, 'error', 'Informe um gênero.');
+      return;
+    }
+
+    const btn = event.target;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Buscando...';
+    feedback.className = 'feedback';
+
+    try {
+      const res = await fetch(
+        `${API}/populate?genre=${encodeURIComponent(genre)}&limit=${limit}`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const data = await res.json();
+
+      if (res.status === 401) { logout(); return; }
+
+      if (!res.ok) {
+        showFeedback(feedback, 'error', data.detail || 'Erro ao popular.');
+        return;
+      }
+
+      showFeedback(
+        feedback,
+        'success',
+        `${data.albums_saved} álbuns salvos para "${genre}". Total no gênero: ${data.total_albums_in_genre}.`
+      );
+      loadAdminAlbums();
+    } catch {
+      showFeedback(feedback, 'error', 'Erro ao conectar na API.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Popular';
+    }
+  }
+
+  async function loadAdminAlbums() {
+    const content = document.getElementById('admin-albums-content');
+    content.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+
+    try {
+      const res = await fetch(`${API}/albums`);
+      const data = await res.json();
+      const albums = data.albums || [];
+
+      if (albums.length === 0) {
+        content.innerHTML = `
+          <div class="empty-state">
+            <div class="icon">🎵</div>
+            <p>Nenhum álbum. Use "Popular gênero" para adicionar.</p>
+          </div>`;
+        return;
+      }
+
+      content.innerHTML = albums.map(a => {
+        const thumb = a.image_url
+          ? `<img class="album-row-thumb" src="${a.image_url}" alt="" onerror="this.style.opacity=0">`
+          : `<div class="album-row-thumb" style="display:flex;align-items:center;justify-content:center;font-size:1.2rem">🎵</div>`;
+
+        const genres = Array.isArray(a.genre) ? a.genre.join(', ') : a.genre;
+        return `
+          <div class="album-row" id="album-row-${a.id}">
+            ${thumb}
+            <div class="album-row-info">
+              <div class="album-row-name">${escapeHtml(a.name)}</div>
+              <div class="album-row-artist">${escapeHtml(a.artist)}</div>
+            </div>
+            <div class="album-row-genres">${escapeHtml(genres)}</div>
+            <button class="btn btn-danger" onclick="deleteAlbum(${a.id}, '${escapeAttr(a.name)}')">Deletar</button>
+          </div>`;
+      }).join('');
+    } catch {
+      content.innerHTML = `<div class="empty-state"><p>Erro ao carregar álbuns.</p></div>`;
+    }
+  }
+
+  async function deleteAlbum(id, name) {
+    if (!confirm(`Deletar "${name}"?`)) return;
+
+    const btn = document.querySelector(`#album-row-${id} .btn-danger`);
+    if (btn) { btn.disabled = true; btn.textContent = '...'; }
+
+    try {
+      const res = await fetch(`${API}/albums/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (res.ok) {
+        const row = document.getElementById(`album-row-${id}`);
+        if (row) row.remove();
+      } else {
+        const data = await res.json();
+        alert(data.detail || 'Erro ao deletar.');
+        if (btn) { btn.disabled = false; btn.textContent = 'Deletar'; }
+      }
+    } catch {
+      alert('Erro ao conectar na API.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Deletar'; }
+    }
+  }
+
+  function logout() {
+    token = null;
+    localStorage.removeItem('dm_token');
+    location.reload();
+  }
+
+  function showFeedback(el, type, msg) {
+    el.textContent = msg;
+    el.className = `feedback ${type} visible`;
+  }
+
+  function escapeHtml(str) {
+    const d = document.createElement('div');
+    d.textContent = String(str);
+    return d.innerHTML;
+  }
+
+  function escapeAttr(str) {
+    return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+  }
+
+  // Allow Enter key on API key input
+  document.getElementById('api-key-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') login();
+  });
+</script>
+
+</body>
+</html>

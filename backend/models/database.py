@@ -2,7 +2,7 @@
 Database configuration and models
 """
 
-from sqlalchemy import create_engine, Column, Integer, String, JSON
+from sqlalchemy import create_engine, Column, Integer, String, JSON, cast
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 
@@ -74,7 +74,9 @@ def albums_by_genre(genre: str, db: Session) -> list:
     """
     Search for albums in database by genre
     """
-    return db.query(AlbumDB).filter(AlbumDB.genre.contains([genre.lower()])).all()
+    return db.query(AlbumDB).filter(
+        cast(AlbumDB.genre, String).contains(f'"{genre.lower()}"')
+    ).all()
 
 
 def save_album(albums_external: list, genre: str, db: Session) -> list:

@@ -1,6 +1,6 @@
-## 🎵 Darkmoon Records — Music Discovery API
+## 🎵 Darkmoon Records — Music Discovery
 
-Uma API para descobrir e recomendar álbuns musicais aleatórios baseado em gênero. Popula o catálogo via Last.fm e recomenda do banco local.
+Uma aplicação para descobrir e recomendar álbuns musicais aleatórios baseado em gênero. Popula o catálogo via Last.fm e recomenda do banco local.
 
 **Status:** v1.0.0 — Em desenvolvimento ativo 🚀
 
@@ -13,7 +13,37 @@ Uma API para descobrir e recomendar álbuns musicais aleatórios baseado em gên
 - 📊 **Listagem por Gênero** — Filtra e lista álbuns do catálogo
 - 🔐 **Autenticação JWT** — Rotas administrativas protegidas por token
 - 🗄️ **Persistência Local** — SQLite com SQLAlchemy ORM
+- 🌐 **Frontend Web** — Interface HTML/CSS para descoberta e administração
 - 📚 **Documentação Interativa** — Swagger/OpenAPI automático
+
+---
+
+## 🛠️ Estrutura do Projeto
+
+```
+darkmoon-records/
+├── backend/
+│   ├── main.py                 # Endpoints da API + CORS
+│   ├── models/
+│   │   └── database.py         # Modelos e helpers SQLAlchemy
+│   ├── services/
+│   │   └── music_service.py    # Integração Last.fm
+│   ├── auth/
+│   │   └── auth.py             # JWT — geração e verificação
+│   ├── testAPI.py              # Script de teste Last.fm
+│   └── darkmoon_records.db     # SQLite (gerado automaticamente)
+├── frontend/
+│   ├── index.html              # Página de descoberta
+│   ├── admin.html              # Painel administrativo
+│   ├── style.css               # Estilos globais
+│   └── public/
+│       └── img/
+│           └── darkmoon.jpg    # Imagem do header
+├── .env                        # Variáveis de ambiente
+├── .env.example                # Modelo de variáveis
+├── requirements.txt
+└── README.md
+```
 
 ---
 
@@ -29,15 +59,15 @@ cd darkmoon-records
 ```powershell
 python -m venv venv
 venv\Scripts\activate.ps1
-pip install -r requirements.txt
+pip install -r backend/requirements.txt
 ```
 
 ### 3. Configure as variáveis de ambiente
 ```bash
-cp .env.example .env
+cp backend/.env.example backend/.env
 ```
 
-Edite o `.env` com suas chaves:
+Edite o `backend/.env` com suas chaves:
 ```env
 LASTFM_API_KEY=sua_chave_lastfm
 LASTFM_API_SECRET=seu_secret_lastfm
@@ -50,13 +80,28 @@ Para gerar `ADMIN_API_KEY` e `JWT_SECRET`:
 python -c "import secrets; print(secrets.token_hex(32))"
 ```
 
-### 4. Execute a API
+### 4. Inicie o backend
 ```bash
-cd src
+cd backend
 uvicorn main:app --reload
 ```
 
-Servidor rodando em: **http://localhost:8000**
+API rodando em: **http://localhost:8000**
+
+### 5. Abra o frontend
+
+Abra `frontend/index.html` diretamente no navegador, ou sirva com Live Server / qualquer servidor estático.
+
+---
+
+## 🌐 Frontend
+
+| Página | Arquivo | Descrição |
+|--------|---------|-----------|
+| Descoberta | `frontend/index.html` | Recomendação por gênero, listagem de álbuns e stats |
+| Admin | `frontend/admin.html` | Login, popular gêneros e deletar álbuns |
+
+O frontend consome a API em `http://localhost:8000`. Para alterar, edite a constante `API` no `<script>` de cada página.
 
 ---
 
@@ -85,9 +130,9 @@ Content-Type: application/json
 Authorization: Bearer SEU_TOKEN
 ```
 
-No Swagger (`/docs`), clique em **Authorize** (cadeado) e cole o token.
+No frontend, o token é obtido pelo painel Admin e salvo no `localStorage` (válido por 24 horas).
 
-O token expira em **24 horas**.
+No Swagger (`/docs`), clique em **Authorize** (cadeado) e cole o token.
 
 ---
 
@@ -120,24 +165,6 @@ O token expira em **24 horas**.
 
 ---
 
-## 🛠️ Estrutura do Projeto
-
-```
-darkmoon-records/
-├── src/
-│   ├── main.py                 # Endpoints da API
-│   └── auth.py                 # JWT — geração e verificação
-├── models/
-│   └── database.py             # Modelos e helpers SQLAlchemy
-├── services/
-│   └── music_service.py        # Integração Last.fm
-├── .env.example                # Variáveis de ambiente (modelo)
-├── requirements.txt
-└── darkmoon_records.db         # SQLite (gerado automaticamente)
-```
-
----
-
 ## ⚙️ Tech Stack
 
 | Tecnologia | Versão | Uso |
@@ -148,13 +175,14 @@ darkmoon-records/
 | **SQLite** | 3 | Database local |
 | **Pydantic** | 2.0+ | Validação |
 | **PyJWT** | 2.12+ | Autenticação JWT |
+| **HTML/CSS/JS** | — | Frontend (vanilla) |
 
 ---
 
 ## 🔮 Roadmap
 
 - [ ] 💾 Histórico de recomendações
-- [ ] 🎨 Frontend web
+- [ ] 🔎 Busca de álbuns por nome/artista
 
 ---
 

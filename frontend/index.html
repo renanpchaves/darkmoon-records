@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Darkmoon Records</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="utils.js"></script>
 </head>
 <body>
 
@@ -49,7 +50,7 @@
   <div class="albums-section">
     <div class="albums-toggle">
       <p class="section-title" style="margin-bottom:0">Todos os álbuns</p>
-      <button class="btn btn-secondary" onclick="toggleAlbums()">Mostrar</button>
+      <button class="btn btn-secondary" onclick="toggleAlbums(this)">Mostrar</button>
     </div>
 
     <div id="albums-list" class="albums-list">
@@ -66,7 +67,6 @@
 </main>
 
 <script>
-  const API = 'http://localhost:8000';
   let albumsVisible = false;
   let genresList = [];
 
@@ -86,7 +86,7 @@
 
       const sel = document.getElementById('genre-select');
       sel.innerHTML = genres.genres
-        .map(g => `<option value="${g}">${capitalize(g)}</option>`)
+        .map(g => `<option value="${g}">${g.charAt(0).toUpperCase() + g.slice(1)}</option>`)
         .join('');
     } else {
       document.getElementById('genre-select').innerHTML =
@@ -153,9 +153,8 @@
     `;
   }
 
-  async function toggleAlbums() {
+  async function toggleAlbums(btn) {
     const list = document.getElementById('albums-list');
-    const btn = event.target;
 
     if (!albumsVisible) {
       albumsVisible = true;
@@ -206,21 +205,6 @@
     } catch {
       content.innerHTML = `<div class="empty-state"><p>Erro ao carregar álbuns.</p></div>`;
     }
-  }
-
-  function showFeedback(el, type, msg) {
-    el.textContent = msg;
-    el.className = `feedback ${type} visible`;
-  }
-
-  function capitalize(s) {
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  }
-
-  function escapeHtml(str) {
-    const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
   }
 
   init();

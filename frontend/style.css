@@ -41,17 +41,6 @@ header {
   gap: 12px;
 }
 
-.logo-icon {
-  width: 36px;
-  height: 36px;
-  background: var(--accent);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-}
-
 .logo h1 {
   font-size: 1.2rem;
   font-weight: 700;
@@ -384,9 +373,20 @@ select {
   font-size: 0.85rem;
 }
 
+.populate-form input[type="text"] { flex: 1; min-width: 160px; }
+
 .populate-form input[type="number"] {
   width: 80px;
 }
+
+.admin-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.admin-section-header h2 { margin-bottom: 0; }
 
 /* FEEDBACK */
 .feedback {

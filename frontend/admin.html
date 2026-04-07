@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin — Darkmoon Records</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="utils.js"></script>
 </head>
 <body>
 
@@ -34,18 +35,18 @@
   <div class="admin-section" id="section-populate">
     <h2>Popular gênero</h2>
     <div class="populate-form">
-      <input type="text" id="populate-genre" placeholder="Gênero (ex: rock, jazz)" style="flex:1;min-width:160px" />
+      <input type="text" id="populate-genre" placeholder="Gênero (ex: rock, jazz)" />
       <label>Limite</label>
       <input type="number" id="populate-limit" value="50" min="1" max="100" />
-      <button class="btn btn-primary" onclick="populate()">Popular</button>
+      <button class="btn btn-primary" onclick="populate(this)">Popular</button>
     </div>
     <div id="populate-feedback" class="feedback"></div>
   </div>
 
   <!-- ALBUMS MANAGEMENT -->
   <div class="admin-section" id="section-albums">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
-      <h2 style="margin-bottom:0">Gerenciar álbuns</h2>
+    <div class="admin-section-header">
+      <h2>Gerenciar álbuns</h2>
       <button class="btn btn-secondary" onclick="loadAdminAlbums()">Atualizar</button>
     </div>
 
@@ -62,7 +63,6 @@
 </main>
 
 <script>
-  const API = 'http://localhost:8000';
   let token = localStorage.getItem('dm_token');
 
   function setAuthenticated() {
@@ -110,7 +110,7 @@
     }
   }
 
-  async function populate() {
+  async function populate(btn) {
     const genre = document.getElementById('populate-genre').value.trim();
     const limit = parseInt(document.getElementById('populate-limit').value) || 50;
     const feedback = document.getElementById('populate-feedback');
@@ -120,7 +120,6 @@
       return;
     }
 
-    const btn = event.target;
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Buscando...';
     feedback.className = 'feedback';
@@ -226,17 +225,6 @@
     token = null;
     localStorage.removeItem('dm_token');
     location.reload();
-  }
-
-  function showFeedback(el, type, msg) {
-    el.textContent = msg;
-    el.className = `feedback ${type} visible`;
-  }
-
-  function escapeHtml(str) {
-    const d = document.createElement('div');
-    d.textContent = String(str);
-    return d.innerHTML;
   }
 
   function escapeAttr(str) {
